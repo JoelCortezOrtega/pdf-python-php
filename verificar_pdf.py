@@ -1,19 +1,12 @@
-# -*- coding: utf-8 -*-
 import sys
 import os
-import io
 import json
 from PyPDF2 import PdfReader
 from PIL import Image
 import fitz  # PyMuPDF
 
-# Forzar UTF-8 en salida estándar (necesario en Windows)
-if sys.platform.startswith("win"):
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
-
 def es_hoja_en_blanco(img, umbral=5):
-    """Detecta si una imagen es prácticamente blanca."""
+    """Detecta si una página (imagen PIL en escala de grises) está en blanco."""
     if img.mode != "L":
         img = img.convert("L")
     hist = img.histogram()
@@ -21,12 +14,10 @@ def es_hoja_en_blanco(img, umbral=5):
     brillo_prom = sum(i * hist[i] for i in range(256)) / total_pix
     return brillo_prom > (255 - umbral)
 
-
 def es_escala_grises(img):
     """Detecta si una imagen es realmente en escala de grises."""
     if img.mode != "RGB":
         img = img.convert("RGB")
-    # Muestrea cada 20 píxeles para mayor velocidad
     pix = img.load()
     for x in range(0, img.width, 20):
         for y in range(0, img.height, 20):
@@ -35,16 +26,17 @@ def es_escala_grises(img):
                 return False
     return True
 
-
 def verificar_pdf(ruta_pdf):
     resultado = {
         "archivo_valido": True,
+        "cumple_vucem": True,
         "errores": [],
         "detalles": {
-            "tamano_MB": round(os.path.getsize(ruta_pdf) / (1024 * 1024), 2),
+            "tamano_MB": round(os.path.getsize(ruta_pdf) / (1024*1024), 2),
             "paginas": 0,
             "paginas_en_blanco": [],
             "paginas_no_grises": [],
+            "paginas_con_ocr": [],
             "formularios_JS": False,
             "protegido": False
         }
@@ -52,41 +44,48 @@ def verificar_pdf(ruta_pdf):
 
     if not os.path.exists(ruta_pdf):
         resultado['archivo_valido'] = False
+        resultado['cumple_vucem'] = False
         resultado['errores'].append("El archivo no existe.")
         return resultado
 
-    # Intentar abrir PDF
     try:
         reader = PdfReader(ruta_pdf)
     except Exception:
         resultado['archivo_valido'] = False
+        resultado['cumple_vucem'] = False
         resultado['errores'].append("No se puede abrir el PDF.")
         return resultado
 
     # Verificar protección
     if reader.is_encrypted:
         resultado['archivo_valido'] = False
+        resultado['cumple_vucem'] = False
         resultado['errores'].append("PDF protegido con contraseña")
         resultado['detalles']['protegido'] = True
 
-    # Verificar formularios y JS
+    # Verificar formularios y JavaScript
     try:
         root_obj = reader.trailer['/Root']
         if hasattr(root_obj, "get_object"):
             root_obj = root_obj.get_object()
 
+        # Formularios
         if '/AcroForm' in root_obj:
-            resultado['archivo_valido'] = False
-            resultado['errores'].append("PDF contiene formularios incrustados (AcroForm)")
-            resultado['detalles']['formularios_JS'] = True
-        elif '/Names' in root_obj:
-            names = root_obj['/Names']
-            if hasattr(names, "get_object"):
-                names = names.get_object()
-            if '/JavaScript' in names:
+            acro = root_obj['/AcroForm']
+            if hasattr(acro, 'get_object'):
+                acro = acro.get_object()
+            if '/Fields' in acro and len(acro['/Fields']) > 0:
                 resultado['archivo_valido'] = False
-                resultado['errores'].append("PDF contiene scripts JavaScript incrustados")
+                resultado['cumple_vucem'] = False
+                resultado['errores'].append("PDF contiene formularios")
                 resultado['detalles']['formularios_JS'] = True
+
+        # JavaScript incrustado
+        if '/Names' in root_obj and '/JavaScript' in root_obj['/Names']:
+            resultado['archivo_valido'] = False
+            resultado['cumple_vucem'] = False
+            resultado['errores'].append("PDF contiene JavaScript incrustado")
+            resultado['detalles']['formularios_JS'] = True
 
     except Exception as e:
         resultado['errores'].append(f"No se pudo verificar formularios/JS: {e}")
@@ -100,33 +99,57 @@ def verificar_pdf(ruta_pdf):
             pix = pagina.get_pixmap(dpi=150)
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
-            # Verificar escala de grises
+            # Escala de grises
             if not es_escala_grises(img):
                 resultado['detalles']['paginas_no_grises'].append(i)
 
-            # Verificar si la página está en blanco
+            # Hoja en blanco
             if es_hoja_en_blanco(img):
                 resultado['detalles']['paginas_en_blanco'].append(i)
 
+            # OCR detectado (si la página tiene texto sobre imagen)
+            if pagina.get_text("text"):
+                resultado['detalles']['paginas_con_ocr'].append(i)
+
         doc.close()
 
-        # Si hay páginas con color → marcar como no válido
+        # Marcar errores según resultados
         if resultado['detalles']['paginas_no_grises']:
             resultado['archivo_valido'] = False
+            resultado['cumple_vucem'] = False
             resultado['errores'].append(
                 f"Páginas no en escala de grises: {resultado['detalles']['paginas_no_grises']}"
             )
 
+        if resultado['detalles']['paginas_en_blanco']:
+            resultado['archivo_valido'] = False
+            resultado['cumple_vucem'] = False
+            resultado['errores'].append(
+                f"Páginas en blanco: {resultado['detalles']['paginas_en_blanco']}"
+            )
+
+        if resultado['detalles']['paginas_con_ocr']:
+            resultado['archivo_valido'] = False
+            resultado['cumple_vucem'] = False
+            resultado['errores'].append(
+                f"Páginas con OCR sobre imagen: {resultado['detalles']['paginas_con_ocr']}"
+            )
+
     except Exception as e:
         resultado['archivo_valido'] = False
+        resultado['cumple_vucem'] = False
         resultado['errores'].append(f"Error al procesar páginas: {str(e)}")
 
     return resultado
 
-
 if __name__ == "__main__":
+    import io
+    import sys
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')  # Forzar UTF-8
+
     if len(sys.argv) < 2:
-        print(json.dumps({"archivo_valido": False, "errores": ["No se proporcionó PDF"]}, ensure_ascii=False))
+        print(json.dumps({"archivo_valido": False, "cumple_vucem": False, "errores": ["No se proporcionó PDF"]}, ensure_ascii=False))
     else:
         ruta = sys.argv[1]
         res = verificar_pdf(ruta)
