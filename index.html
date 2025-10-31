@@ -1,22 +1,16 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Subir y convertir PDF</title>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Login</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <script src='main.js'></script>
 </head>
 <body>
-    <h2>Subir PDF para conversión</h2>
-    <form action="upload.php" method="post" enctype="multipart/form-data">
-        <input type="file" name="archivo_pdf" accept=".pdf,application/pdf" required>
-        <button type="submit">Convertir PDF</button>
-    </form>
-
-    <h2>Subir PDF para verificación</h2>
-    <form action="verificar.php" method="post" enctype="multipart/form-data">
-        <label for="pdf_file">Selecciona PDF:</label>
-        <input type="file" id="pdf_file" name="pdf_file" accept=".pdf,application/pdf" required>
-        <button type="submit">Subir PDF</button>
-    </form>
+    <!-- Redirección inmediata -->
+    <meta http-equiv="refresh" content="0; url=login.html">
 </body>
 </html>
 

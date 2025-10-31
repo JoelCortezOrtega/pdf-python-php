@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SEER • Inicio de sesión</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/login.css"/>
+
+</head>
+<body>
+
+  <div class="login-container row g-0">
+    
+    <!-- Lado izquierdo: branding -->
+    <div class="col-md-6 brand-side">
+      <img src="img/LOGONegro.png" alt="SEER Tráfico S.C." />
+      <h1 class="brand-title">CAAST</h1>
+      <p class="brand-subtitle">Portal de Carga de Información</p>
+    </div>
+
+    <!-- Lado derecho: formulario -->
+    <div class="col-md-6 form-side">
+      <h2>Inicio de sesión</h2>
+      <p>Acceso de proveedor IMMEX al portal <strong>/CDE</strong></p>
+
+      <form id="loginForm">
+        <label for="rfc" class="form-label">RFC</label>
+        <input type="text" class="form-control" id="rfc" placeholder="RFC" autocomplete="username" />
+
+        <label for="pwd" class="form-label">Contraseña</label>
+        <div class="pwd-wrapper mb-2">
+          <input type="password" class="form-control" id="pwd" placeholder="••••••••" autocomplete="current-password" />
+          <button type="button" id="togglePwd" tabindex="-1">
+            <i id="eyeIcon" class="bi bi-eye"></i>
+          </button>
+        </div>
+        <div id="alertBox"></div>
+        <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+      </form>
+      
+      <div class="footer">Portal SEER Tráfico S.C. — versión demo</div>
+    </div>
+
+  </div>
+
+  <script>
+    //ACCION PARA VALIDAR EL FORMULARIO
+      document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const rfc = document.getElementById("rfc").value.trim();
+      const pwd = document.getElementById("pwd").value.trim();
+      const alertBox = document.getElementById("alertBox");
+      alertBox.innerHTML = '';
+
+      if(!rfc || !pwd){
+        alertBox.innerHTML = '<div class="alert alert-danger mt-3" role="alert">Por favor, complete todos los campos.</div>';
+        return;
+      }
+
+    // Simulación de autenticación
+      if(rfc === "caast" && pwd === "123"){
+        alertBox.innerHTML = '<div class="alert alert-success mt-3" role="alert">Inicio de sesión exitoso. Redirigiendo...</div>';
+        setTimeout(() => {
+          window.location.href = "verificacion.html"; // Redirigir a la página principal
+        }, 1500);
+        } else if (rfc !== "caast" && pwd !== "123") {
+        alertBox.innerHTML = '<div class="alert alert-danger mt-3" role="alert">RFC o contraseña incorrectos.</div>';
+      } else if(rfc !== "caast") 
+      {
+        alertBox.innerHTML = '<div class="alert alert-danger mt-3" role="alert">El RFC es incorrectos.</div>';
+      }else if(pwd !== "123"){
+        alertBox.innerHTML = '<div class="alert alert-danger mt-3" role="alert">La contraseña es incorrecta.</div>';
+      }
+    });
+    
+    // ACCION PARA MOSTRAR/OCULTAR CONTRASEÑA
+      document.getElementById("togglePwd").addEventListener("click", function() {
+      const pwdInput = document.getElementById("pwd");
+      const eyeIcon = document.getElementById("eyeIcon");
+      if (pwdInput.type === "password") {
+        pwdInput.type = "text";
+        eyeIcon.classList.remove("bi-eye");
+        eyeIcon.classList.add("bi-eye-slash");
+      } else {
+        pwdInput.type = "password";
+        eyeIcon.classList.remove("bi-eye-slash");
+        eyeIcon.classList.add("bi-eye");
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

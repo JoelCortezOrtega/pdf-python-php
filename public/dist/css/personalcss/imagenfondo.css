@@ -1,0 +1,66 @@
+body{
+    background: linear-gradient(rgba(0,0,0,.8),rgba(0,0,0,.8)),url(../../img/hospital.jpg) no-repeat fixed center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-szie: cover;
+    width:  100%;
+    height: 100%;
+    font-family: sans-serif;
+}
+[name=cardTitle]{
+    font-size:2rem;
+}
+
+.header .navbar a{
+    background-color: transparent !important;
+    color: rgb(246, 242, 242);
+}
+
+header{
+    background: linear-gradient(rgb(16, 16, 16,0.25), rgb(220, 219, 219,0.25));
+}
+
+.fade-in-image { animation: fadeIn 5s; }
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+[name=containerBody]{
+    padding-left:0px; 
+    padding-right:0px
+}
+.alertDiv{
+    height: calc(100vh);
+    overflow-y: auto;
+}
+.transparent{    
+    background-color: rgba(0,0,0,0.15);
+}
+.navbar .nav-link.active {
+    background-image: linear-gradient(rgb(48, 48, 48), rgba(220, 219, 219, 0.25)) !important;
+    border-radius: 13px;
+}
+ul.nav {
+    li.disabled {
+        cursor: not-allowed;
+
+        a {
+            pointer-events: none;
+        }
+    }
+}
+.textoColor{
+    color: rgb(255, 255, 255);
+    font-size: large;
+    font-weight: bold;
+}
+/*--------------------------*/
+#tablon{
+    margin-right: 0;
+    margin-left: 0;
+    background-color: rgb(34, 212, 108);
+}
+.tablonPrin{
+    margin-right: 0;
+    margin-left: 0;
+}
