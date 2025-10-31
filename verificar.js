@@ -1,4 +1,19 @@
-$(document).ready(function() {
+$(document).ready(function () {
+    // Guarda la instancia del DataTable para manipularla luego
+    var table = $('#producto_data').DataTable({
+        data: [],
+        columns: [
+            { title: "Archivo" },
+            { title: "Tamaño" },
+            { title: "Mensaje" },
+            { title: "Acciones" }
+        ],
+        language: { emptyTable: "No hay archivos seleccionados." },
+        paging: false,
+        searching: false,
+        info: false
+    });
+
     $('#btnVerificar').on('click', function(e) {
         e.preventDefault(); // Evita que el botón haga submit
 
@@ -61,20 +76,17 @@ $(document).ready(function() {
                     // Botón de conversión dentro de la fila
                     let btnConvertirHTML = `<button class="btn btn-sm btn-primary btn-convertir mt-1" data-archivo="${response.archivo_servidor}">Convertir PDF</button>`;
 
-                    var fila = `
-                        <tr>
-                            <td>${response.archivo_original}</td>
-                            <td>${response.tamano}</td>
-                            <td>${revisionHTML}</td>
-                            <td>
-                                <a href="uploads/${response.archivo_servidor}" target="_blank">Ver</a>
-                                <br>
-                                ${btnConvertirHTML}
-                            </td>
-                        </tr>
-                    `;
+                    // Limpia la tabla antes de agregar la nueva fila
+                    table.clear();
 
-                    $('#tbody').append(fila);
+                    // Agrega la fila nueva a DataTable
+                    table.row.add([
+                        response.archivo_original,
+                        response.tamano,
+                        revisionHTML,
+                        `<a href="uploads/${response.archivo_servidor}" target="_blank">Ver</a><br>${btnConvertirHTML}`
+                    ]).draw();
+
                     $('#pdf_file').val("");
                 } else {
                     Swal.fire("Errores", response.errores.join("<br>"), "error");
