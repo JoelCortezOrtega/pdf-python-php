@@ -58,12 +58,19 @@ $(document).ready(function() {
                             ${advertenciasHTML}
                         </div>`;
 
+                    // Botón de conversión dentro de la fila
+                    let btnConvertirHTML = `<button class="btn btn-sm btn-primary btn-convertir mt-1" data-archivo="${response.archivo_servidor}">Convertir PDF</button>`;
+
                     var fila = `
                         <tr>
                             <td>${response.archivo_original}</td>
                             <td>${response.tamano}</td>
                             <td>${revisionHTML}</td>
-                            <td><a href="uploads/${response.archivo_servidor}" target="_blank">Ver</a></td>
+                            <td>
+                                <a href="uploads/${response.archivo_servidor}" target="_blank">Ver</a>
+                                <br>
+                                ${btnConvertirHTML}
+                            </td>
                         </tr>
                     `;
 
@@ -78,9 +85,7 @@ $(document).ready(function() {
             }
         });
     });
-
 });
-
 
 // Evento delegado para los botones de detalles
 $(document).on('click', '.ver-errores', function() {
@@ -93,3 +98,45 @@ $(document).on('click', '.ver-errores', function() {
         width: 600
     });
 });
+
+// Evento delegado para botones de conversión dentro de la tabla
+$(document).on('click', '.btn-convertir', function() {
+    var archivo = $(this).data('archivo');
+
+    Swal.fire({
+        title: 'Convirtiendo PDF...',
+        html: 'Por favor espera mientras se procesa el archivo.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    $.ajax({
+        url: 'upload.php',
+        type: 'POST',
+        data: { archivo_pdf: archivo },
+        dataType: 'json',
+        success: function(response) {
+            Swal.close();
+
+            if (response.ok) {
+                Swal.fire({
+                    title: '✅ Conversión completada',
+                    html: `Tu PDF convertido está listo.<br><a href="${response.archivo_convertido}" target="_blank">Descargar PDF</a>`,
+                    icon: 'success'
+                });
+            } else {
+                Swal.fire({
+                    title: '❌ Error en la conversión',
+                    html: response.mensaje.replace(/\n/g, "<br>"),
+                    icon: 'error'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.close();
+            Swal.fire("Error", "Error en la solicitud: " + error, "error");
+        }
+    });
+});
+
+

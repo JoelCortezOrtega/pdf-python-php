@@ -1,44 +1,44 @@
 <?php
-// Configuración de rutas
+header('Content-Type: application/json');
+
 $uploadDir = __DIR__ . "/uploads/";
 $outputDir = __DIR__ . "/salida/";
 
-// Crear carpetas si no existen
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 if (!is_dir($outputDir)) mkdir($outputDir, 0777, true);
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["archivo_pdf"])) {
-    $fileTmp = $_FILES["archivo_pdf"]["tmp_name"];
-    $fileName = basename($_FILES["archivo_pdf"]["name"]);
+$response = ["ok" => false, "mensaje" => "", "archivo_convertido" => ""];
 
-    // Validar tipo de archivo
-    $fileType = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-    if ($fileType !== "pdf") {
-        die("❌ Solo se permiten archivos PDF.");
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["archivo_pdf"])) {
+    $archivo = basename($_POST["archivo_pdf"]);
+    $inputPath = $uploadDir . $archivo;
+    $outputPath = $outputDir . "convertido_" . $archivo;
+
+    if (!file_exists($inputPath)) {
+        $response["mensaje"] = "❌ El archivo no existe en el servidor.";
+        echo json_encode($response);
+        exit;
     }
 
-    $inputPath = $uploadDir . $fileName;
-    $outputPath = $outputDir . "convertido_" . $fileName;
+    $python = "C:\\Users\\CAAST-02\\AppData\\Local\\Programs\\Python\\Python313\\python.exe";
+    $cmd = escapeshellcmd("\"$python\" convertir.py " . escapeshellarg($inputPath) . " " . escapeshellarg($outputPath));
+    
+    // Ejecutar el script Python
+    $output = shell_exec($cmd . " 2>&1");
 
-    // Mover archivo subido a carpeta "uploads"
-    if (move_uploaded_file($fileTmp, $inputPath)) {
-        echo "✅ PDF subido correctamente.<br>";
-
-        // Ejecutar el script Python usando ruta completa
-        $python = "C:\\Users\\CAAST-02\\AppData\\Local\\Programs\\Python\\Python313\\python.exe";
-        $cmd = escapeshellcmd("\"$python\" convertir.py " . escapeshellarg($inputPath) . " " . escapeshellarg($outputPath));
-        $output = shell_exec($cmd . " 2>&1");
-
-        echo "<pre>$output</pre>";
-
-        if (file_exists($outputPath)) {
-            echo "✅ Conversión completada. <a href='salida/" . basename($outputPath) . "'>Descargar PDF convertido</a>";
-        } else {
-            echo "❌ Error: no se generó el PDF convertido.";
-        }
+    if (file_exists($outputPath)) {
+        $response["ok"] = true;
+        $response["mensaje"] = "✅ Conversión completada.";
+        $response["archivo_convertido"] = "salida/" . basename($outputPath);
     } else {
-        echo "❌ Error al subir el archivo.";
+        // Devuelve la salida de Python en el JSON, escapando saltos de línea
+        $response["mensaje"] = "❌ Error en la conversión.\n" . strip_tags($output);
     }
+} else {
+    $response["mensaje"] = "❌ No se envió ningún archivo.";
 }
-?>
+
+echo json_encode($response);
+
+
 
