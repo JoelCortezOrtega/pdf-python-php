@@ -21,19 +21,6 @@
     <link rel="stylesheet" href="public/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
 </head>
 <body>
-<!--     <h2>Subir PDF para conversión</h2>
-    <form action="upload.php" method="post" enctype="multipart/form-data">
-        <input type="file" name="archivo_pdf" accept=".pdf,application/pdf" required>
-        <button type="submit">Convertir PDF</button>
-    </form>
-
-    <h2>Subir PDF para verificación</h2>
-    <form action="verificacion.php" method="post" enctype="multipart/form-data">
-        <label for="pdf_file">Selecciona PDF:</label>
-        <input type="file" id="pdf_file" name="pdf_file" accept=".pdf,application/pdf" required>
-        <button type="submit">Subir PDF</button>
-    </form> -->
-
     <!-- MENU SUPERIOR -->
     <div class="brandbar">
       <div class="container-fluid py-2">
@@ -66,8 +53,9 @@
 
         <div class="mb-4">
           <label for="pdfFiles" class="form-label">Selecciona uno o más archivos PDF:</label>
-          <input type="file" id="pdf_file" accept="application/pdf" required>
+          <input type="file" id="pdf_file" accept="application/pdf" multiple required>
           <button id="btnVerificar" class="btn btn-primary">Verificar PDF</button>
+          <button id="btn-convertir" class="btn btn-primary">Convertir PDF</button>
         </div>
 
         <table id="producto_data" class="table table-bordered table-striped align-middle">
