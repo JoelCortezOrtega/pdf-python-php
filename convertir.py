@@ -52,19 +52,14 @@ if __name__ == "__main__":
         sys.exit(1)  # salir con error si no hay parámetros
 
     entrada = sys.argv[1]
-    salida_dir = sys.argv[2]
+    salida = sys.argv[2]  # ahora es archivo completo
 
-    if not os.path.exists(salida_dir):
-        os.makedirs(salida_dir)
-
-    # Nombre de salida legible
-    nombre_archivo = os.path.basename(entrada).replace(".pdf", "_convertido.pdf")
-    salida = os.path.join(salida_dir, nombre_archivo)
+    # Crear carpeta padre si no existe
+    os.makedirs(os.path.dirname(salida), exist_ok=True)
 
     convertir_pdf_escala_grises(entrada, salida)
+    print(os.path.basename(salida))
 
-    # Solo imprimir el nombre del archivo convertido, sin la carpeta
-    print(nombre_archivo)
 
 
 

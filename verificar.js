@@ -122,61 +122,66 @@ $(document).ready(function () {
         });
     });
 
-    // -------------------------------
-    // 🔹 BOTÓN CONVERTIR
-    // -------------------------------
-    $(document).on('click', '#btn-convertir', function() {
-        if (archivosVerificados.length === 0) {
-            Swal.fire("Aviso", "No hay archivos cargados para convertir.", "info");
-            return;
-        }
+// -------------------------------
+// 🔹 BOTÓN CONVERTIR
+// -------------------------------
+$(document).on('click', '#btn-convertir', function() {
+    if (archivosVerificados.length === 0) {
+        Swal.fire("Aviso", "No hay archivos cargados para convertir.", "info");
+        return;
+    }
 
-        // Crear FormData con los nombres ya verificados
-        let formData = new FormData();
-        archivosVerificados.forEach(nombre => {
-            formData.append('archivos_pdf[]', nombre);
-        });
-
-        Swal.fire({
-            title: 'Convirtiendo PDF(s)...',
-            html: 'Por favor espera mientras se procesan los archivos.',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        $.ajax({
-            url: 'upload.php',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            dataType: 'json',
-            success: function(response) {
-                Swal.close();
-
-                if (response.ok) {
-                    let lista = response.archivos_convertidos.map(a =>
-                        `<li><a href="${a}" target="_blank">${a}</a></li>`
-                    ).join("");
-                    Swal.fire({
-                        title: '✅ Conversión completada',
-                        html: `<p>Archivos convertidos:</p><ul>${lista}</ul>`,
-                        icon: 'success'
-                    });
-                } else {
-                    Swal.fire({
-                        title: '❌ Error en la conversión',
-                        html: response.mensajes.join("<br>"),
-                        icon: 'error'
-                    });
-                }
-            },
-            error: function(xhr, status, error) {
-                Swal.close();
-                Swal.fire("Error", "Error en la solicitud: " + error, "error");
-            }
-        });
+    // Crear FormData con los nombres ya verificados
+    let formData = new FormData();
+    archivosVerificados.forEach(nombre => {
+        formData.append('archivos_pdf[]', nombre);
     });
+
+    Swal.fire({
+        title: 'Convirtiendo PDF(s)...',
+        html: 'Por favor espera mientras se procesan los archivos.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    $.ajax({
+    url: 'upload.php',
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(response) {
+        Swal.close();
+
+        if (response.ok) {
+            Swal.fire({
+                title: '✅ Conversión completada',
+                html: `<p>Archivos convertidos correctamente.</p>
+                       <button id="btnDescargarZIP" class="btn btn-success">📥 Descargar ZIP</button>`,
+                icon: 'success',
+                showConfirmButton: false
+            });
+
+            $("#btnDescargarZIP").on("click", function() {
+                window.location.href = response.zip;
+            });
+
+        } else {
+            Swal.fire({
+                title: '❌ Error en la conversión',
+                html: response.mensajes.join("<br>"),
+                icon: 'error'
+            });
+        }
+    },
+    error: function(xhr, status, error) {
+        Swal.close();
+        Swal.fire("Error", "Error en la solicitud: " + error, "error");
+    }
+});
+});
+
 });
 
 

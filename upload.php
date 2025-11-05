@@ -12,17 +12,13 @@ if (!is_dir($outputDir)) mkdir($outputDir, 0777, true);
 $response = [
     "ok" => false,
     "mensajes" => [],
-    "archivos_convertidos" => []
+    "archivos_convertidos" => [],
+    "zip" => ""
 ];
 
-// Revisar si hay archivos enviados
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["archivos_pdf"])) {
     $archivos = $_POST["archivos_pdf"];
-
-    // Asegurarse de que sea un array
-    if (!is_array($archivos)) {
-        $archivos = [$archivos];
-    }
+    if (!is_array($archivos)) $archivos = [$archivos];
 
     $python = "C:\\Users\\JOEL-PC\\AppData\\Local\\Programs\\Python\\Python314\\python.exe";
     $scriptPython = __DIR__ . DIRECTORY_SEPARATOR . "convertir.py";
@@ -37,31 +33,45 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["archivos_pdf"])) {
             continue;
         }
 
-        // Ejecutar el script de Python
         $cmd = "\"$python\" \"$scriptPython\" " . escapeshellarg($inputPath) . " " . escapeshellarg($outputPath);
         $output = shell_exec($cmd . " 2>&1");
 
         if (file_exists($outputPath)) {
-            $response["archivos_convertidos"][] =  basename($outputPath);
+            $response["archivos_convertidos"][] = basename($outputPath);
             $response["mensajes"][] = "✅ $archivo convertido correctamente.";
         } else {
             $response["mensajes"][] = "❌ Error al convertir $archivo:\n" . strip_tags($output);
         }
     }
 
-    // Si al menos uno se convirtió correctamente
+    // Crear ZIP si hay archivos convertidos
     if (count($response["archivos_convertidos"]) > 0) {
+        $zipName = "convertidos_" . date("Ymd_His") . ".zip";
+        $zipPath = $outputDir . $zipName;
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($response["archivos_convertidos"] as $conv) {
+                $zip->addFile($outputDir . $conv, $conv); // agrega solo el archivo, sin subcarpetas
+            }
+            $zip->close();
+            $response["zip"] = "salida/" . $zipName;
+        } else {
+            $response["mensajes"][] = "❌ No se pudo crear el archivo ZIP.";
+        }
+
         $response["ok"] = true;
     }
-
 } else {
     $response["mensajes"][] = "❌ No se recibieron archivos válidos.";
 }
 
-// Enviar únicamente JSON limpio
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 exit;
 ?>
+
+
+
 
 
 
